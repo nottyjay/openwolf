@@ -2,10 +2,12 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import * as crypto from "node:crypto";
 
+export function getProjectDir(): string {
+  return process.cwd();
+}
+
 export function getWolfDir(): string {
-  // Prefer CLAUDE_PROJECT_DIR so hooks work even if CWD changes during a session
-  const projectDir = process.env.CLAUDE_PROJECT_DIR || process.cwd();
-  return path.join(projectDir, ".wolf");
+  return path.join(getProjectDir(), ".wolf");
 }
 
 /**
