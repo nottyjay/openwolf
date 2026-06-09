@@ -6,6 +6,12 @@ export function getProjectDir(): string {
   return process.cwd();
 }
 
+export function getHookProvider(): "claude" | "codex" {
+  const scriptPath = normalizePath(process.argv[1] || "");
+  if (scriptPath.includes("/codex/")) return "codex";
+  return "claude";
+}
+
 export function getWolfDir(): string {
   return path.join(getProjectDir(), ".wolf");
 }

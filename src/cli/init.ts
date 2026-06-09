@@ -8,6 +8,7 @@ import { readJSON, writeJSON, readText, writeText } from "../utils/fs-safe.js";
 import { ensureDir } from "../utils/paths.js";
 import { isWindows } from "../utils/platform.js";
 import { registerProject } from "./registry.js";
+import { getCodexConfigToml } from "./codex-config.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -120,6 +121,8 @@ const CLAUDE_HOOK_SETTINGS = {
   },
 };
 
+const CODEX_PROJECT_ROOT = '$(git rev-parse --show-toplevel 2>/dev/null || pwd)';
+
 const CODEX_HOOK_SETTINGS = {
   hooks: {
     SessionStart: [
@@ -128,7 +131,7 @@ const CODEX_HOOK_SETTINGS = {
         hooks: [
           {
             type: "command",
-            command: 'node "$(git rev-parse --show-toplevel)/.wolf/hooks/codex/session-start.js"',
+            command: `node "${CODEX_PROJECT_ROOT}/.wolf/hooks/codex/session-start.js"`,
             timeout: 5,
             statusMessage: "OpenWolf session bootstrap",
           },
@@ -141,7 +144,7 @@ const CODEX_HOOK_SETTINGS = {
         hooks: [
           {
             type: "command",
-            command: 'node "$(git rev-parse --show-toplevel)/.wolf/hooks/codex/pre-read.js"',
+            command: `node "${CODEX_PROJECT_ROOT}/.wolf/hooks/codex/pre-read.js"`,
             timeout: 5,
             statusMessage: "OpenWolf read precheck",
           },
@@ -152,7 +155,7 @@ const CODEX_HOOK_SETTINGS = {
         hooks: [
           {
             type: "command",
-            command: 'node "$(git rev-parse --show-toplevel)/.wolf/hooks/codex/pre-write.js"',
+            command: `node "${CODEX_PROJECT_ROOT}/.wolf/hooks/codex/pre-write.js"`,
             timeout: 5,
             statusMessage: "OpenWolf write precheck",
           },
@@ -165,7 +168,7 @@ const CODEX_HOOK_SETTINGS = {
         hooks: [
           {
             type: "command",
-            command: 'node "$(git rev-parse --show-toplevel)/.wolf/hooks/codex/post-read.js"',
+            command: `node "${CODEX_PROJECT_ROOT}/.wolf/hooks/codex/post-read.js"`,
             timeout: 5,
             statusMessage: "OpenWolf read tracking",
           },
@@ -176,7 +179,7 @@ const CODEX_HOOK_SETTINGS = {
         hooks: [
           {
             type: "command",
-            command: 'node "$(git rev-parse --show-toplevel)/.wolf/hooks/codex/post-write.js"',
+            command: `node "${CODEX_PROJECT_ROOT}/.wolf/hooks/codex/post-write.js"`,
             timeout: 10,
             statusMessage: "OpenWolf write tracking",
           },
@@ -188,7 +191,7 @@ const CODEX_HOOK_SETTINGS = {
         hooks: [
           {
             type: "command",
-            command: 'node "$(git rev-parse --show-toplevel)/.wolf/hooks/codex/stop.js"',
+            command: `node "${CODEX_PROJECT_ROOT}/.wolf/hooks/codex/stop.js"`,
             timeout: 10,
             statusMessage: "OpenWolf session finalize",
           },
@@ -197,10 +200,6 @@ const CODEX_HOOK_SETTINGS = {
     ],
   },
 };
-
-const CODEX_CONFIG_TOML = `[features]
-codex_hooks = true
-`;
 
 export async function initCommand(targetArg?: string): Promise<void> {
   // Check Node.js version
@@ -416,7 +415,7 @@ function installCodexIntegration(projectRoot: string, templatesDir: string): voi
   ensureDir(codexDir);
 
   writeJSON(path.join(codexDir, "hooks.json"), CODEX_HOOK_SETTINGS);
-  writeText(path.join(codexDir, "config.toml"), CODEX_CONFIG_TOML);
+  writeText(path.join(codexDir, "config.toml"), getCodexConfigToml());
 
   const agentsPath = path.join(projectRoot, "AGENTS.md");
   const snippetContent = readTemplateContent("agents-md-snippet.md", templatesDir);

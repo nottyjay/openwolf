@@ -34,10 +34,12 @@ test("default init installs both Claude and Codex integration files", async () =
   const projectRoot = makeProject("dual-target");
   const previousCwd = process.cwd();
   const previousHome = process.env.HOME;
+  const previousCodexVersion = process.env.OPENWOLF_CODEX_VERSION;
   const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), "openwolf-home-"));
 
   process.chdir(projectRoot);
   process.env.HOME = fakeHome;
+  process.env.OPENWOLF_CODEX_VERSION = "0.129.0";
 
   try {
     await runInit();
@@ -59,9 +61,16 @@ test("default init installs both Claude and Codex integration files", async () =
       JSON.stringify(readJSON(path.join(projectRoot, ".codex", "hooks.json"))),
       /\.wolf\/hooks\/codex\/session-start\.js/
     );
+    assert.match(
+      JSON.stringify(readJSON(path.join(projectRoot, ".codex", "hooks.json"))),
+      /git rev-parse --show-toplevel 2>\/dev\/null \|\| pwd/
+    );
+    assert.match(read(path.join(projectRoot, ".codex", "config.toml")), /hooks = true/);
+    assert.doesNotMatch(read(path.join(projectRoot, ".codex", "config.toml")), /codex_hooks = true/);
   } finally {
     process.chdir(previousCwd);
     process.env.HOME = previousHome;
+    process.env.OPENWOLF_CODEX_VERSION = previousCodexVersion;
     fs.rmSync(projectRoot, { recursive: true, force: true });
     fs.rmSync(fakeHome, { recursive: true, force: true });
   }
@@ -71,10 +80,12 @@ test("claude target only installs Claude integration files", async () => {
   const projectRoot = makeProject("claude-only");
   const previousCwd = process.cwd();
   const previousHome = process.env.HOME;
+  const previousCodexVersion = process.env.OPENWOLF_CODEX_VERSION;
   const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), "openwolf-home-"));
 
   process.chdir(projectRoot);
   process.env.HOME = fakeHome;
+  process.env.OPENWOLF_CODEX_VERSION = "0.129.0";
 
   try {
     await runInit("claude");
@@ -89,6 +100,7 @@ test("claude target only installs Claude integration files", async () => {
   } finally {
     process.chdir(previousCwd);
     process.env.HOME = previousHome;
+    process.env.OPENWOLF_CODEX_VERSION = previousCodexVersion;
     fs.rmSync(projectRoot, { recursive: true, force: true });
     fs.rmSync(fakeHome, { recursive: true, force: true });
   }
@@ -98,10 +110,12 @@ test("codex target only installs Codex integration files", async () => {
   const projectRoot = makeProject("codex-only");
   const previousCwd = process.cwd();
   const previousHome = process.env.HOME;
+  const previousCodexVersion = process.env.OPENWOLF_CODEX_VERSION;
   const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), "openwolf-home-"));
 
   process.chdir(projectRoot);
   process.env.HOME = fakeHome;
+  process.env.OPENWOLF_CODEX_VERSION = "0.129.0";
 
   try {
     await runInit("codex");
@@ -113,9 +127,12 @@ test("codex target only installs Codex integration files", async () => {
     assert.equal(fs.existsSync(path.join(projectRoot, ".wolf", "hooks", "claude", "session-start.js")), false);
     assert.equal(fs.existsSync(path.join(projectRoot, "CLAUDE.md")), false);
     assert.equal(fs.existsSync(path.join(projectRoot, ".claude", "settings.json")), false);
+    assert.match(read(path.join(projectRoot, ".codex", "config.toml")), /hooks = true/);
+    assert.doesNotMatch(read(path.join(projectRoot, ".codex", "config.toml")), /codex_hooks = true/);
   } finally {
     process.chdir(previousCwd);
     process.env.HOME = previousHome;
+    process.env.OPENWOLF_CODEX_VERSION = previousCodexVersion;
     fs.rmSync(projectRoot, { recursive: true, force: true });
     fs.rmSync(fakeHome, { recursive: true, force: true });
   }

@@ -13,6 +13,7 @@ import { fileURLToPath } from "node:url";
 import { getRegisteredProjects, registerProject, type RegisteredProject } from "./registry.js";
 import { readJSON, writeJSON, readText, writeText } from "../utils/fs-safe.js";
 import { ensureDir } from "../utils/paths.js";
+import { getCodexConfigToml } from "./codex-config.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -58,24 +59,22 @@ const CLAUDE_HOOK_SETTINGS = {
   },
 };
 
+const CODEX_PROJECT_ROOT = '$(git rev-parse --show-toplevel 2>/dev/null || pwd)';
+
 const CODEX_HOOK_SETTINGS = {
   hooks: {
-    SessionStart: [{ matcher: "startup|resume|clear", hooks: [{ type: "command", command: 'node "$(git rev-parse --show-toplevel)/.wolf/hooks/codex/session-start.js"', timeout: 5, statusMessage: "OpenWolf session bootstrap" }] }],
+    SessionStart: [{ matcher: "startup|resume|clear", hooks: [{ type: "command", command: `node "${CODEX_PROJECT_ROOT}/.wolf/hooks/codex/session-start.js"`, timeout: 5, statusMessage: "OpenWolf session bootstrap" }] }],
     PreToolUse: [
-      { matcher: "Read", hooks: [{ type: "command", command: 'node "$(git rev-parse --show-toplevel)/.wolf/hooks/codex/pre-read.js"', timeout: 5, statusMessage: "OpenWolf read precheck" }] },
-      { matcher: "Edit|Write|MultiEdit|apply_patch", hooks: [{ type: "command", command: 'node "$(git rev-parse --show-toplevel)/.wolf/hooks/codex/pre-write.js"', timeout: 5, statusMessage: "OpenWolf write precheck" }] },
+      { matcher: "Read", hooks: [{ type: "command", command: `node "${CODEX_PROJECT_ROOT}/.wolf/hooks/codex/pre-read.js"`, timeout: 5, statusMessage: "OpenWolf read precheck" }] },
+      { matcher: "Edit|Write|MultiEdit|apply_patch", hooks: [{ type: "command", command: `node "${CODEX_PROJECT_ROOT}/.wolf/hooks/codex/pre-write.js"`, timeout: 5, statusMessage: "OpenWolf write precheck" }] },
     ],
     PostToolUse: [
-      { matcher: "Read", hooks: [{ type: "command", command: 'node "$(git rev-parse --show-toplevel)/.wolf/hooks/codex/post-read.js"', timeout: 5, statusMessage: "OpenWolf read tracking" }] },
-      { matcher: "Edit|Write|MultiEdit|apply_patch", hooks: [{ type: "command", command: 'node "$(git rev-parse --show-toplevel)/.wolf/hooks/codex/post-write.js"', timeout: 10, statusMessage: "OpenWolf write tracking" }] },
+      { matcher: "Read", hooks: [{ type: "command", command: `node "${CODEX_PROJECT_ROOT}/.wolf/hooks/codex/post-read.js"`, timeout: 5, statusMessage: "OpenWolf read tracking" }] },
+      { matcher: "Edit|Write|MultiEdit|apply_patch", hooks: [{ type: "command", command: `node "${CODEX_PROJECT_ROOT}/.wolf/hooks/codex/post-write.js"`, timeout: 10, statusMessage: "OpenWolf write tracking" }] },
     ],
-    Stop: [{ hooks: [{ type: "command", command: 'node "$(git rev-parse --show-toplevel)/.wolf/hooks/codex/stop.js"', timeout: 10, statusMessage: "OpenWolf session finalize" }] }],
+    Stop: [{ hooks: [{ type: "command", command: `node "${CODEX_PROJECT_ROOT}/.wolf/hooks/codex/stop.js"`, timeout: 10, statusMessage: "OpenWolf session finalize" }] }],
   },
 };
-
-const CODEX_CONFIG_TOML = `[features]
-codex_hooks = true
-`;
 
 interface UpdateResult {
   project: RegisteredProject;
@@ -236,7 +235,7 @@ async function updateProject(
     const codexDir = path.join(root, ".codex");
     ensureDir(codexDir);
     writeJSON(path.join(codexDir, "hooks.json"), CODEX_HOOK_SETTINGS);
-    writeText(path.join(codexDir, "config.toml"), CODEX_CONFIG_TOML);
+    writeText(path.join(codexDir, "config.toml"), getCodexConfigToml());
     console.log(`    ✓ Codex hooks updated`);
 
     const agentsPath = path.join(root, "AGENTS.md");
