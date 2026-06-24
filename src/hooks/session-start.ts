@@ -1,11 +1,10 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { getWolfDir, ensureWolfDir, writeJSON, appendMarkdown, readJSON, timestamp, timeShort, getHookProvider } from "./shared.js";
+import { getWolfDir, ensureWolfDir, writeJSON, appendMarkdown, readJSON, timestamp, timeShort } from "./shared.js";
 
 async function main(): Promise<void> {
   ensureWolfDir();
   const wolfDir = getWolfDir();
-  const provider = getHookProvider();
   const notices: string[] = [];
 
   // Clean up stale .tmp files left from failed atomic writes
@@ -81,18 +80,12 @@ async function main(): Promise<void> {
   writeJSON(ledgerPath, ledger);
 
   if (notices.length > 0) {
-    if (provider === "codex") {
-      process.stdout.write(JSON.stringify({
-        hookSpecificOutput: {
-          hookEventName: "SessionStart",
-          additionalContext: notices.join("\n"),
-        },
-      }));
-    } else {
-      for (const notice of notices) {
-        process.stderr.write(`${notice}\n`);
-      }
-    }
+    process.stdout.write(JSON.stringify({
+      hookSpecificOutput: {
+        hookEventName: "SessionStart",
+        additionalContext: notices.join("\n"),
+      },
+    }));
   }
 
   process.exit(0);

@@ -46,16 +46,16 @@ const BACKUP_FILES = [
 
 const CLAUDE_HOOK_SETTINGS = {
   hooks: {
-    SessionStart: [{ matcher: "", hooks: [{ type: "command", command: 'node "$CLAUDE_PROJECT_DIR/.wolf/hooks/claude/session-start.js"', timeout: 5 }] }],
+    SessionStart: [{ matcher: "", hooks: [{ type: "command", command: "node", args: ["${CLAUDE_PROJECT_DIR}/.wolf/hooks/claude/session-start.js", "${CLAUDE_PROJECT_DIR}"], timeout: 5 }] }],
     PreToolUse: [
-      { matcher: "Read", hooks: [{ type: "command", command: 'node "$CLAUDE_PROJECT_DIR/.wolf/hooks/claude/pre-read.js"', timeout: 5 }] },
-      { matcher: "Write|Edit|MultiEdit", hooks: [{ type: "command", command: 'node "$CLAUDE_PROJECT_DIR/.wolf/hooks/claude/pre-write.js"', timeout: 5 }] },
+      { matcher: "Read", hooks: [{ type: "command", command: "node", args: ["${CLAUDE_PROJECT_DIR}/.wolf/hooks/claude/pre-read.js", "${CLAUDE_PROJECT_DIR}"], timeout: 5 }] },
+      { matcher: "Write|Edit|MultiEdit", hooks: [{ type: "command", command: "node", args: ["${CLAUDE_PROJECT_DIR}/.wolf/hooks/claude/pre-write.js", "${CLAUDE_PROJECT_DIR}"], timeout: 5 }] },
     ],
     PostToolUse: [
-      { matcher: "Read", hooks: [{ type: "command", command: 'node "$CLAUDE_PROJECT_DIR/.wolf/hooks/claude/post-read.js"', timeout: 5 }] },
-      { matcher: "Write|Edit|MultiEdit", hooks: [{ type: "command", command: 'node "$CLAUDE_PROJECT_DIR/.wolf/hooks/claude/post-write.js"', timeout: 10 }] },
+      { matcher: "Read", hooks: [{ type: "command", command: "node", args: ["${CLAUDE_PROJECT_DIR}/.wolf/hooks/claude/post-read.js", "${CLAUDE_PROJECT_DIR}"], timeout: 5 }] },
+      { matcher: "Write|Edit|MultiEdit", hooks: [{ type: "command", command: "node", args: ["${CLAUDE_PROJECT_DIR}/.wolf/hooks/claude/post-write.js", "${CLAUDE_PROJECT_DIR}"], timeout: 10 }] },
     ],
-    Stop: [{ matcher: "", hooks: [{ type: "command", command: 'node "$CLAUDE_PROJECT_DIR/.wolf/hooks/claude/stop.js"', timeout: 10 }] }],
+    Stop: [{ matcher: "", hooks: [{ type: "command", command: "node", args: ["${CLAUDE_PROJECT_DIR}/.wolf/hooks/claude/stop.js", "${CLAUDE_PROJECT_DIR}"], timeout: 10 }] }],
   },
 };
 
@@ -426,15 +426,16 @@ function replaceOpenWolfHooks(
 ): Record<string, unknown> {
   const merged = { ...existing };
   if (!merged.hooks) merged.hooks = {};
-  const hooks = merged.hooks as Record<string, Array<{ matcher: string; hooks: Array<{ command?: string; type: string }> }>>;
+  const hooks = merged.hooks as Record<string, Array<{ matcher: string; hooks: Array<{ command?: string; args?: string[]; type: string }> }>>;
 
   for (const [event, newMatchers] of Object.entries(hookSettings.hooks)) {
     if (!hooks[event]) hooks[event] = [];
 
-    // Remove existing OpenWolf hook entries
+    // Remove existing OpenWolf hook entries (match by .wolf/hooks/ in command or args)
     hooks[event] = hooks[event].filter((entry) => {
       const isOpenWolfHook = entry.hooks?.some(
-        (h) => h.command && h.command.includes(".wolf/hooks/")
+        (h) => (h.command && h.command.includes(".wolf/hooks/")) ||
+               (h.args && h.args.some((a: string) => a.includes(".wolf/hooks/")))
       );
       return !isOpenWolfHook;
     });

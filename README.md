@@ -2,7 +2,7 @@
   <img src="demo.gif" alt="OpenWolf demo" width="640" />
 </p>
 
-<h1 align="center">OpenWolf</h1>
+<h1 align="center">@alptech/openwolf</h1>
 
 <p align="center">
   <strong>A second brain for Claude Code and Codex.</strong><br />
@@ -10,10 +10,12 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/openwolf"><img src="https://img.shields.io/npm/v/openwolf.svg" alt="npm version" /></a>
+  <a href="https://www.npmjs.com/package/@alptech/openwolf"><img src="https://img.shields.io/npm/v/@alptech/openwolf.svg" alt="npm version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-AGPL--3.0-blue.svg" alt="License: AGPL-3.0" /></a>
   <a href="https://nodejs.org"><img src="https://img.shields.io/badge/Node.js-20%2B-green.svg" alt="Node.js" /></a>
 </p>
+
+> **This is a fork of [openwolf](https://www.npmjs.com/package/openwolf) by [Cytostack](https://github.com/cytostack).** It preserves all original capabilities and adds native, first-class [Codex](https://github.com/openai/codex) integration alongside the existing Claude Code support. Both agents get equal treatment — dedicated hook scripts, project entry files, and config scaffolding.
 
 ---
 
@@ -40,7 +42,7 @@ Across 20 projects, 132+ sessions: average token reduction of 65.8%, with 71% of
 ## Quick Start
 
 ```bash
-npm install -g openwolf
+npm install -g @alptech/openwolf
 cd your-project
 openwolf init
 ```
@@ -240,7 +242,7 @@ OpenWolf is not an AI wrapper. It is 6 hook scripts and a `.wolf/` directory. It
 - Codex hooks require Codex project hook support via `.codex/hooks.json` and `.codex/config.toml`, plus `AGENTS.md` project instructions.
 - Token tracking is estimation-based (character-to-token ratio), not exact API counts. Accurate to within ~15%.
 - `cerebrum.md` depends on Claude following instructions to update it after corrections. Compliance is ~85-90%, not 100%.
-- This is v1.0.4. Things may break. [File issues](https://github.com/cytostack/openwolf/issues).
+- This is v1.0.5. Things may break. [File issues](https://github.com/nottyjay/openwolf/issues).
 
 ## Origin Story
 
@@ -252,4 +254,4 @@ We were building products with Claude Code at Cytostack when we noticed somethin
 
 ## Author
 
-Built by Farhan Palathinkal Afsal - [Cytostack](https://github.com/cytostack)
+Original project by Farhan Palathinkal Afsal — [Cytostack](https://github.com/cytostack). Forked and extended with first-class Codex integration by [@alptech](https://www.npmjs.com/package/@alptech/openwolf).

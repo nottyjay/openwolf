@@ -47,7 +47,8 @@ const CREATE_IF_MISSING = [
 
 type InitTarget = "claude" | "codex";
 
-// Use $CLAUDE_PROJECT_DIR so hooks resolve correctly even if CWD changes during a session
+// Use ${CLAUDE_PROJECT_DIR} with exec form so hooks resolve correctly regardless of CWD.
+// The second arg passes the project dir to the hook scripts, making them independent of process.cwd().
 const CLAUDE_HOOK_SETTINGS = {
   hooks: {
     SessionStart: [
@@ -56,7 +57,8 @@ const CLAUDE_HOOK_SETTINGS = {
         hooks: [
           {
             type: "command",
-            command: 'node "$CLAUDE_PROJECT_DIR/.wolf/hooks/claude/session-start.js"',
+            command: "node",
+            args: ["${CLAUDE_PROJECT_DIR}/.wolf/hooks/claude/session-start.js", "${CLAUDE_PROJECT_DIR}"],
             timeout: 5,
           },
         ],
@@ -68,7 +70,8 @@ const CLAUDE_HOOK_SETTINGS = {
         hooks: [
           {
             type: "command",
-            command: 'node "$CLAUDE_PROJECT_DIR/.wolf/hooks/claude/pre-read.js"',
+            command: "node",
+            args: ["${CLAUDE_PROJECT_DIR}/.wolf/hooks/claude/pre-read.js", "${CLAUDE_PROJECT_DIR}"],
             timeout: 5,
           },
         ],
@@ -78,7 +81,8 @@ const CLAUDE_HOOK_SETTINGS = {
         hooks: [
           {
             type: "command",
-            command: 'node "$CLAUDE_PROJECT_DIR/.wolf/hooks/claude/pre-write.js"',
+            command: "node",
+            args: ["${CLAUDE_PROJECT_DIR}/.wolf/hooks/claude/pre-write.js", "${CLAUDE_PROJECT_DIR}"],
             timeout: 5,
           },
         ],
@@ -90,7 +94,8 @@ const CLAUDE_HOOK_SETTINGS = {
         hooks: [
           {
             type: "command",
-            command: 'node "$CLAUDE_PROJECT_DIR/.wolf/hooks/claude/post-read.js"',
+            command: "node",
+            args: ["${CLAUDE_PROJECT_DIR}/.wolf/hooks/claude/post-read.js", "${CLAUDE_PROJECT_DIR}"],
             timeout: 5,
           },
         ],
@@ -100,7 +105,8 @@ const CLAUDE_HOOK_SETTINGS = {
         hooks: [
           {
             type: "command",
-            command: 'node "$CLAUDE_PROJECT_DIR/.wolf/hooks/claude/post-write.js"',
+            command: "node",
+            args: ["${CLAUDE_PROJECT_DIR}/.wolf/hooks/claude/post-write.js", "${CLAUDE_PROJECT_DIR}"],
             timeout: 10,
           },
         ],
@@ -112,7 +118,8 @@ const CLAUDE_HOOK_SETTINGS = {
         hooks: [
           {
             type: "command",
-            command: 'node "$CLAUDE_PROJECT_DIR/.wolf/hooks/claude/stop.js"',
+            command: "node",
+            args: ["${CLAUDE_PROJECT_DIR}/.wolf/hooks/claude/stop.js", "${CLAUDE_PROJECT_DIR}"],
             timeout: 10,
           },
         ],
@@ -638,17 +645,18 @@ function replaceOpenWolfHooks(
   if (!merged.hooks) {
     merged.hooks = {};
   }
-  const hooks = merged.hooks as Record<string, Array<{ matcher: string; hooks: Array<{ command?: string; type: string }> }>>;
+  const hooks = merged.hooks as Record<string, Array<{ matcher: string; hooks: Array<{ command?: string; args?: string[]; type: string }> }>>;
 
   for (const [event, newMatchers] of Object.entries(hookSettings.hooks)) {
     if (!hooks[event]) {
       hooks[event] = [];
     }
 
-    // Remove any existing OpenWolf hook entries (match by .wolf/hooks/ in command)
+    // Remove any existing OpenWolf hook entries (match by .wolf/hooks/ in command or args)
     hooks[event] = hooks[event].filter((entry) => {
       const isOpenWolfHook = entry.hooks?.some(
-        (h) => h.command && h.command.includes(".wolf/hooks/")
+        (h) => (h.command && h.command.includes(".wolf/hooks/")) ||
+               (h.args && h.args.some((a: string) => a.includes(".wolf/hooks/")))
       );
       return !isOpenWolfHook;
     });

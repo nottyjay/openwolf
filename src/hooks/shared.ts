@@ -3,6 +3,11 @@ import * as path from "node:path";
 import * as crypto from "node:crypto";
 
 export function getProjectDir(): string {
+  // argv[2] is the first user argument after the script path, passed by hook config.
+  // Newer Claude Code may not run hooks from the project directory — rely on the
+  // explicit project-dir argument when available, falling back to process.cwd().
+  const argDir = process.argv[2];
+  if (argDir && fs.existsSync(argDir)) return argDir;
   return process.cwd();
 }
 
